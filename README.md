@@ -45,3 +45,14 @@ uvicorn app.main:app --reload --port 8010
 ```bash
 WEBHOOK_API_KEY=super-secret docker compose up --build -d
 ```
+
+---
+
+## 👨‍💻 Архитектор и коммерческая разработка
+
+**Юрий Радеевич** — Telegram-инженер & Fullstack Архитектор автономных систем продаж (FastAPI + React).
+
+- 🌐 Официальный сайт: [radeevich.ru](https://radeevich.ru)
+- 💬 Личный Telegram: [@radeevich](https://t.me/radeevich)
+- 📱 Telegram Mini App Шоурум: [t.me/radeevich_bot/app](https://t.me/radeevich_bot/app)
+- 📄 B2B Презентация решений (PDF): [radeevich.ru/radeevich_solutions_profile.pdf](https://radeevich.ru/radeevich_solutions_profile.pdf)
