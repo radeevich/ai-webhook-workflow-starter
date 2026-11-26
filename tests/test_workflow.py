@@ -108,3 +108,48 @@ def test_auth_and_rate_limiting(client):
         },
     )
     assert sixth.status_code == 429
+
+def test_production_mode_refuses_default_webhook_secret(monkeypatch):
+    import pytest
+    from app.main import create_app
+    monkeypatch.setenv("ENV", "production")
+    monkeypatch.delenv("WEBHOOK_API_KEY", raising=False)
+    with pytest.raises(RuntimeError, match="CRITICAL SECURITY CONFIGURATION ERROR"):
+        create_app(api_key=None)
+
+
+def test_hmac_signature_auth():
+    import hashlib
+    import hmac
+    import json
+    from starlette.testclient import TestClient
+    from app.main import create_app
+
+    secret = "test-hmac-secret-123"
+    app = create_app(api_key="never-used-key", webhook_secret=secret)
+    c = TestClient(app)
+
+    payload = {
+        "event_id": "hmac-evt-01",
+        "source": "telegram",
+        "client_id": "client_hmac",
+        "text": "Тест с HMAC подписью",
+    }
+    raw_body = json.dumps(payload).encode("utf-8")
+    sig = hmac.new(secret.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
+
+    # Valid HMAC signature succeeds without X-API-Key
+    res = c.post(
+        "/v1/webhooks/inbound",
+        content=raw_body,
+        headers={"Content-Type": "application/json", "X-Hub-Signature-256": f"sha256={sig}"},
+    )
+    assert res.status_code == 200
+
+    # Invalid HMAC signature fails
+    bad_res = c.post(
+        "/v1/webhooks/inbound",
+        content=raw_body,
+        headers={"Content-Type": "application/json", "X-Hub-Signature-256": "sha256=invalid"},
+    )
+    assert bad_res.status_code == 401
